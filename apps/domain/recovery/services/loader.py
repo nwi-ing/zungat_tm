@@ -16,7 +16,7 @@ class DriverLoader:
     
     def _loadPaymentRules(self) -> list[PaymentRule]:
         payment_rules = self.bx_client.payment_rule.iter_list(
-            filters={"@is_active":[271]}
+            filters={"@is_active":[269,271]}
             )
         return list(payment_rules)
     

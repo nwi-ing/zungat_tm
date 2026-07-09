@@ -20,12 +20,15 @@ class CreatePayment:
         
         return last_operation_id
     
-    def _updateDriverSyncState(self,driver:Driver):
+    def _updateDriverSyncState(self, driver: Driver):
         operation_id = self._getLastOperationId(driver)
+
         DriverSyncState.objects.update_or_create(
             driver_id=driver.driver_id,
-            last_processed_operation_id=operation_id
-        )
+            defaults={
+                "last_processed_operation_id": operation_id
+                }
+            )
 
     def _createFactPayment(self,fact_payment:FactPayment):
         try:
@@ -45,7 +48,8 @@ class CreatePayment:
     def create(self,drivers:list[Driver]):
         for driver in drivers:
             payment_list = self._getPaymentList(driver.installments)
-            # for payment in payment_list:
-            #     self._createFactPayment(payment)
-            # self._updateDriverSyncState(driver)
-            
+            for payment in payment_list:
+                response = self._createFactPayment(payment)
+                print("вот платеж:",response)
+            self._updateDriverSyncState(driver)
+        return drivers

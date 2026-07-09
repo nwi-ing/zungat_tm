@@ -12,8 +12,9 @@ class OperationAllocation:
     def __init__(self,tm_client:TMClient):
                 self.tm_client = tm_client
     
-    def _checkAccessOperation(self,operation:Operation) -> bool:
-        driver_sync_state = DriverSyncState.objects.filter(driver_id=operation.driver_id).first()
+    def _checkAccessOperation(self,driver_id:int,operation:Operation) -> bool:
+        driver_sync_state = DriverSyncState.objects.filter(driver_id=driver_id).first()
+
         if driver_sync_state is None:
             return True
         else:
@@ -21,24 +22,24 @@ class OperationAllocation:
                 return False
         return True
 
-    def _checkOperation(self,operation:Operation):
+    def _checkOperation(self,driver_id:int,operation:Operation):
         if operation.oper_type != "receipt":
             return False
-        if not self._checkAccessOperation(operation):
+        if not self._checkAccessOperation(driver_id,operation):
             return False
         if operation.cancelled_oper_id != 0:
             return False
         if operation.cancelled_by_oper_id != 0:
             return False
-        # if "отмена" in operation.title.lower():
-        #     return False
+        if "отмена" in operation.title.lower():
+            return False
         
         return True
 
     def _getCorrectOperations(self,driver:Driver) -> list[Operation]:
         correct_operations = []
         for operation in driver.operations:
-            if self._checkOperation(operation):
+            if self._checkOperation(driver.driver_id,operation):
                 correct_operations.append(operation)
 
         return correct_operations
@@ -65,9 +66,7 @@ class OperationAllocation:
             finish_time=finish_time
             )
         driver.operations = operations
-        print("Всего операций запрошено:",len(operations))
         operations = self._getCorrectOperations(driver)
-        print("Всего корректных операций:",len(operations))
         return operations
     
 
