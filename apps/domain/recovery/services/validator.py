@@ -1,6 +1,6 @@
 
 from apps.domain.recovery.schemas.driver import Driver,Installment
-from apps.integrations.bx24.lib.schemas import Deal,PaymentRule
+from apps.integrations.bx24.lib.schemas import Deal,PaymentRule,PaymentRuleState
 
 
 class InstallmentValidator:
@@ -10,7 +10,7 @@ class InstallmentValidator:
     def _checkPaymentRule(self,payment_rule:PaymentRule) -> bool:
         if payment_rule is None:
             return False
-        if payment_rule.is_active not in [269,271]:
+        if payment_rule.is_active not in (PaymentRuleState.SCHEDULED, PaymentRuleState.MID_RECOVERY):
             return False
         
         return True

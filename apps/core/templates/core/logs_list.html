@@ -1,0 +1,35 @@
+{% extends "core/base.html" %}
+{% block title %}Логи — Зунгат TM{% endblock %}
+{% block content %}
+<h1>Логи</h1>
+
+<form class="filters" hx-get="{% url 'core:log_list' %}" hx-target="#logs-tbody" hx-swap="innerHTML" hx-trigger="change">
+    <select name="module">
+        <option value="">Все модули</option>
+        {% for m in modules %}
+        <option value="{{ m }}" {% if m == selected_module %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+    </select>
+    <select name="level">
+        <option value="">Все уровни</option>
+        {% for value, display in levels %}
+        <option value="{{ value }}" {% if value == selected_level %}selected{% endif %}>{{ display }}</option>
+        {% endfor %}
+    </select>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Время</th>
+            <th>Модуль</th>
+            <th>Уровень</th>
+            <th>Сообщение</th>
+            <th>Длительность</th>
+        </tr>
+    </thead>
+    <tbody id="logs-tbody">
+        {% include "core/partials/logs_table.html" %}
+    </tbody>
+</table>
+{% endblock %}

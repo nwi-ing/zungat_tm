@@ -1,9 +1,22 @@
+from enum import IntEnum
 from typing import Optional, List
 
 from pydantic import Field,field_validator
 
 from apps.integrations.bx24.lib.schemas.crm.base_model import BaseConfigModel
 
+
+class PaymentRuleState(IntEnum):
+    """Значения поля ufCrm15RuleState (PaymentRule.is_active) в Bitrix.
+    SCHEDULED — обычный активный график автосписаний (autopayment).
+    MID_RECOVERY — рассрочка ещё не закрыта, но не на регулярном графике
+    (например, идёт списание арестов) — только recovery должен её видеть.
+    Любое другое значение (или отсутствие рассрочки в выдаче) — рассрочка
+    полностью отключена, оба модуля её не трогают.
+    """
+
+    SCHEDULED = 269
+    MID_RECOVERY = 271
 
 
 class PaymentRule(BaseConfigModel):

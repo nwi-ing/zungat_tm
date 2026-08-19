@@ -10,7 +10,9 @@ class PaymentCalculation:
     
 
     def calculate(self,fact_payment,payment_rule):
-        balance = self.tm_client.driver.get(id=payment_rule.driver_id).balance
+        # Отмена платежа не проверяет баланс водителя и не считает
+        # перерасход — в отличие от writeoff, отмена должна проходить
+        # всегда, независимо от текущего баланса.
         payment_sum = [i for i in [fact_payment.opportunity,fact_payment.arest_sum] if i is not None]
 
         payment_sum = sum(payment_sum)

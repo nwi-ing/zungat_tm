@@ -220,3 +220,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local dev port-mapping override (Docker Desktop can't reach the bridge
+# network's static IPs directly, unlike a native Linux docker host)
+docker-compose.override.yml

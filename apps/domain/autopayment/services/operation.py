@@ -1,5 +1,11 @@
+import logging
+
 from apps.integrations.tm_driver.lib.services.client import TaxiMasterClient as TMClient
 from apps.domain.autopayment.schemas.installment import Installment
+
+logger = logging.getLogger(__name__)
+
+
 class TMOperationError(Exception):
     pass
 
@@ -12,7 +18,7 @@ class MakeOperation:
         for installment in installments:
             try:
                 operation = self.tm_client.operation.add(installment.operation)
-                print("Списание по рассрочке:",installment.deal.title)
+                logger.info("Списание по рассрочке: %s", installment.deal.title)
             except:
                 continue
             installment.operation = operation

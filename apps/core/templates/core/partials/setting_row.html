@@ -1,0 +1,14 @@
+<div class="card" id="setting-{{ setting.module_key }}">
+    <div>
+        <strong>{{ setting.label|default:setting.module_key }}</strong>
+        <div class="muted">{{ setting.module_key }} · обновлено {{ setting.updated_at|date:"d.m.Y H:i" }}{% if setting.updated_by %} — {{ setting.updated_by }}{% endif %}</div>
+    </div>
+    <button
+        class="{% if setting.enabled %}toggle-on{% else %}toggle-off{% endif %}"
+        hx-post="{% url 'core:toggle_setting' setting.module_key %}"
+        hx-target="#setting-{{ setting.module_key }}"
+        hx-swap="outerHTML"
+    >
+        {% if setting.enabled %}Включено{% else %}Выключено{% endif %}
+    </button>
+</div>

@@ -1,4 +1,4 @@
-from .loader import CencelPaymentLoader, DataNotFoundError
+from apps.domain._shared.services import PaymentContextLoader as CencelPaymentLoader, DataNotFoundError
 from .validator import PaymentValidator,ValidationError
 from .calculation import PaymentCalculation, CalculateError
 from .operation import MakeOperation, TMOperationError

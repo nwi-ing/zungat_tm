@@ -1,6 +1,9 @@
+import logging
+
 from apps.integrations.bx24.lib.services.client import Bx24Client
 from apps.domain.autopayment.schemas.installment import Installment
 
+logger = logging.getLogger(__name__)
 
 
 class DataNotFoundError(Exception):
@@ -14,16 +17,15 @@ class InstallmentLoader:
         self.bx_client = bx_client
 
     def _loadPaymentRules(self):
-        """Нужно запрашивать все ПС а не первые 50"""
         payment_rules = self.bx_client.payment_rule.iter_list(
             filters={}
             )
         return list(payment_rules)
-    
+
     def _loadDeals(self,deal_ids):
         """Нужно разделить список на подсписки и запрашивать несколько раз"""
         deals = self.bx_client.deal.iter_list(filters={"id":deal_ids})
-        
+
         return list(deals)
     
     def _makeInstallments(self,payment_rules,deals):
@@ -42,10 +44,10 @@ class InstallmentLoader:
 
     def load(self):
         payment_rules = self._loadPaymentRules()
-        print("всего правил списаний:",len(payment_rules))
+        logger.info("всего правил списаний: %s", len(payment_rules))
         deal_ids = [payment_rule.deal_id for payment_rule in payment_rules if payment_rule.deal_id is not None]
-        print("всего id сделок в ПС:",len(deal_ids))
+        logger.info("всего id сделок в ПС: %s", len(deal_ids))
         deals = self._loadDeals(deal_ids)
-        print("всего сделок получено:",len(deals))
+        logger.info("всего сделок получено: %s", len(deals))
         installments = self._makeInstallments(payment_rules,deals)
         return installments

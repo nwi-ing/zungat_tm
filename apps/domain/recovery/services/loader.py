@@ -1,7 +1,7 @@
 from apps.integrations.bx24.lib.services.client import Bx24Client
 
 from apps.domain.recovery.schemas.driver import Driver, Installment
-from apps.integrations.bx24.lib.schemas import Deal,PaymentRule
+from apps.integrations.bx24.lib.schemas import Deal,PaymentRule,PaymentRuleState
 
 
 
@@ -16,7 +16,7 @@ class DriverLoader:
     
     def _loadPaymentRules(self) -> list[PaymentRule]:
         payment_rules = self.bx_client.payment_rule.iter_list(
-            filters={"@is_active":[269,271]}
+            filters={"@is_active": [PaymentRuleState.SCHEDULED, PaymentRuleState.MID_RECOVERY]}
             )
         return list(payment_rules)
     

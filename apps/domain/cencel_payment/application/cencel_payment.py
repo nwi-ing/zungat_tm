@@ -13,10 +13,10 @@ from apps.domain.cencel_payment.services import (
 
 
 class CencelPaymentApplication:
-    
-    def __init__(self):
-        self.bx_client = Bx24Client()
-        self.tm_client = TMClient()
+
+    def __init__(self, bx_client: Bx24Client = None, tm_client: TMClient = None):
+        self.bx_client = bx_client or Bx24Client()
+        self.tm_client = tm_client or TMClient()
 
         self.cencel_payment_loader = CencelPaymentLoader(self.bx_client)
         self.payment_validator = PaymentValidator(self.bx_client)
@@ -90,7 +90,7 @@ class CencelPaymentApplication:
         
         try:
             self.update_payment.update(fact_payment,operation,payment_rule)
-        except UnicodeDecodeError as e:
+        except UpdatePaymentError as e:
             self._addError(text=str(e),id=fact_payment_id)
             self.update_payment.updateFatalError(fact_payment)
             return

@@ -42,6 +42,84 @@ services:
       zungat_network:
         ipv4_address: ${APP_IPV4_ADDRESS:-192.168.10.10}
 
+  redis:
+    image: redis:7-alpine
+    container_name: zungat_tm_redis
+    restart: always
+    networks:
+      zungat_network:
+        ipv4_address: ${REDIS_IPV4_ADDRESS:-192.168.10.11}
+
+  celery_worker:
+    build: .
+    container_name: zungat_tm_celery_worker
+    entrypoint: ["/app/scripts/docker-entrypoint.sh"]
+    command: ["celery", "-A", "zungat_tm", "worker", "-l", "info"]
+
+    volumes:
+      - ./data:/app/data
+
+    restart: always
+
+    environment:
+      TZ: ${TZ:-Europe/Moscow}
+      DJANGO_SETTINGS_MODULE: zungat_tm.settings
+      PYTHONUNBUFFERED: "1"
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in .env}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:?Set DJANGO_ALLOWED_HOSTS in .env}
+      DJANGO_TIME_ZONE: ${DJANGO_TIME_ZONE:-Europe/Moscow}
+      DJANGO_SQLITE_PATH: ${DJANGO_SQLITE_PATH:-/app/data/db.sqlite3}
+      DJANGO_RUN_MIGRATIONS: "0"
+      DJANGO_COLLECTSTATIC: "0"
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+
+    depends_on:
+      redis:
+        condition: service_started
+      web:
+        condition: service_healthy
+
+    networks:
+      zungat_network:
+        ipv4_address: ${CELERY_WORKER_IPV4_ADDRESS:-192.168.10.12}
+
+  celery_beat:
+    build: .
+    container_name: zungat_tm_celery_beat
+    entrypoint: ["/app/scripts/docker-entrypoint.sh"]
+    command: ["celery", "-A", "zungat_tm", "beat", "-l", "info", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler"]
+
+    volumes:
+      - ./data:/app/data
+
+    restart: always
+
+    environment:
+      TZ: ${TZ:-Europe/Moscow}
+      DJANGO_SETTINGS_MODULE: zungat_tm.settings
+      PYTHONUNBUFFERED: "1"
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in .env}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:?Set DJANGO_ALLOWED_HOSTS in .env}
+      DJANGO_TIME_ZONE: ${DJANGO_TIME_ZONE:-Europe/Moscow}
+      DJANGO_SQLITE_PATH: ${DJANGO_SQLITE_PATH:-/app/data/db.sqlite3}
+      DJANGO_RUN_MIGRATIONS: "0"
+      DJANGO_COLLECTSTATIC: "0"
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+
+    depends_on:
+      redis:
+        condition: service_started
+      web:
+        condition: service_healthy
+
+    networks:
+      zungat_network:
+        ipv4_address: ${CELERY_BEAT_IPV4_ADDRESS:-192.168.10.13}
+
 networks:
   zungat_network:
     driver: bridge

@@ -1,0 +1,10 @@
+{% extends "core/base.html" %}
+{% block title %}Настройки — Зунгат TM{% endblock %}
+{% block content %}
+<h1>Автоматизация</h1>
+{% for setting in settings %}
+    {% include "core/partials/setting_row.html" %}
+{% empty %}
+    <p class="muted">Настроек пока нет.</p>
+{% endfor %}
+{% endblock %}

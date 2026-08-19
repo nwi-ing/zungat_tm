@@ -1,34 +1,17 @@
 # views.py
-import re
+import logging
+
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from pydantic import ValidationError
 
+from apps.core.services import log_run
+from apps.integrations.bx24.lib.services.webhook import parse_bitrix_payload, extract_trailing_id
+
 from ..application.cencel_payment import CencelPaymentApplication
 
-
-
-def parse_bitrix_payload(data: dict) -> dict:
-    result = {}
-
-    for key, value in data.items():
-        value = value[0]
-
-        match = re.match(r"(\w+)\[(.+)\]", key)
-
-        if not match:
-            result[key] = value
-            continue
-
-        root, child = match.groups()
-
-        if root not in result:
-            result[root] = {}
-
-        result[root][child] = value
-
-    return result
+logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
@@ -39,13 +22,12 @@ def cencel_payment(request):
             dict(request.POST.lists())
         )
 
-        match = re.search(r'(\d+)$', payload["document_id"]["2"])
-        result = match.group(1) if match else None
+        result = extract_trailing_id(payload["document_id"]["2"])
         if result is None:
             raise ValueError("document_id does not contain payment id")
 
-        CencelPaymentApplication().execute(fact_payment_id=int(result))
-
+        with log_run("cencel_payment", fact_payment_id=result):
+            CencelPaymentApplication().execute(fact_payment_id=result)
 
         return JsonResponse({
             "status": "success",
@@ -61,7 +43,7 @@ def cencel_payment(request):
         )
 
     except ValidationError as e:
-        print(e)
+        logger.warning("Некорректный вебхук от Bitrix: %s", e)
 
         return JsonResponse(
             {

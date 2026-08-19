@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
-from importlib.util import find_spec
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
@@ -66,8 +65,6 @@ if not DEBUG and not ALLOWED_HOSTS:
 if env_bool("DJANGO_SECURE_PROXY_SSL_HEADER", False):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-WHITENOISE_AVAILABLE = find_spec("whitenoise") is not None
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -82,7 +79,9 @@ INSTALLED_APPS = [
     "apps.domain.writeoff",
     "apps.domain.recovery",
     "apps.domain.autopayment",
-    "apps.domain.cencel_payment"
+    "apps.domain.cencel_payment",
+    "django_celery_beat",
+    "apps.core",
 ]
 
 MIDDLEWARE = [
@@ -94,9 +93,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-if WHITENOISE_AVAILABLE:
-    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
 ROOT_URLCONF = 'zungat_tm.urls'
 
@@ -125,6 +121,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.getenv("DJANGO_SQLITE_PATH", BASE_DIR / 'data/db.sqlite3'),
+        # Celery worker/beat and gunicorn all write to this same sqlite file;
+        # WAL avoids "database is locked" under concurrent writers.
+        'OPTIONS': {
+            'init_command': 'PRAGMA journal_mode=WAL;',
+        },
     }
 }
 
@@ -168,13 +169,35 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": (
-            "whitenoise.storage.CompressedStaticFilesStorage"
-            if WHITENOISE_AVAILABLE
-            else "django.contrib.staticfiles.storage.StaticFilesStorage"
-        ),
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
 MEDIA_URL = os.getenv("DJANGO_MEDIA_URL", "/media/")
 MEDIA_ROOT = os.getenv("DJANGO_MEDIA_ROOT", BASE_DIR / "media")
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+    },
+}
+
+
+# Celery
+# https://docs.celeryq.dev/en/stable/userguide/configuration.html
+
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://redis:6379/0")
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_ALWAYS_EAGER = env_bool("CELERY_TASK_ALWAYS_EAGER", False)
+CELERY_TASK_EAGER_PROPAGATES = True
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+LOG_RETENTION_DAYS = int(os.getenv("LOG_RETENTION_DAYS", "90"))

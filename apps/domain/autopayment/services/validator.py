@@ -2,7 +2,7 @@ from datetime import datetime,timedelta,timezone
 from dateutil.relativedelta import relativedelta
 from apps.integrations.bx24.lib.services.client import Bx24Client
 from apps.domain.autopayment.schemas.installment import Installment
-from apps.integrations.bx24.lib.schemas import Deal,PaymentRule
+from apps.integrations.bx24.lib.schemas import Deal,PaymentRule,PaymentRuleState
 
 class ValidationError(Exception):
     pass
@@ -54,7 +54,7 @@ class PaymentRuleValidate:
 
 
     def checkIsActive(self,payment_rule:PaymentRule) -> bool:
-        if payment_rule.is_active != 269:
+        if payment_rule.is_active != PaymentRuleState.SCHEDULED:
             return False
         
         return True

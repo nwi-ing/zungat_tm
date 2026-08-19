@@ -1,0 +1,11 @@
+{% for entry in page %}
+<tr>
+    <td class="muted">{{ entry.created_at|date:"d.m.Y H:i:s" }}</td>
+    <td>{{ entry.module }}</td>
+    <td class="level-{{ entry.level }}">{{ entry.level }}</td>
+    <td>{{ entry.message }}</td>
+    <td class="muted">{% if entry.duration_ms %}{{ entry.duration_ms }} мс{% endif %}</td>
+</tr>
+{% empty %}
+<tr><td colspan="5" class="muted">Записей нет</td></tr>
+{% endfor %}

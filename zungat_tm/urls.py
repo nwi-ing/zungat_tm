@@ -8,6 +8,7 @@ urlpatterns = [
     path("apps/writeoff/",include("apps.domain.writeoff.urls")),
     path("apps/writeoff/",include("apps.domain.cencel_payment.urls")),
     path("apps/bitrix/",include("apps.integrations.bx24.urls")),
+    path("core/",include("apps.core.urls")),
     # path("apps/",include("apps.domain.recovery.urls")),
     # path("apps/",include("apps.domain.installments.urls"))
     ]

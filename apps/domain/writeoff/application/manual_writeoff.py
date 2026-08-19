@@ -42,10 +42,11 @@ class ManualWriteoffApplication:
         self.bx_client.fact_payment.timeline.add(message)
 
 
-    def __init__(self):
-        self.bx_client = Bx24Client()
-        self.tm_client = TMClient()
-        
+    def __init__(self, bx_client: Bx24Client = None, tm_client: TMClient = None):
+        self.bx_client = bx_client or Bx24Client()
+        self.tm_client = tm_client or TMClient()
+
+
         self.data_loader = WriteoffDataLoader(self.bx_client)
         self.payment_validator = PaymentValidator(self.bx_client)
         self.payment_calculation = PaymentCalculation(self.tm_client)

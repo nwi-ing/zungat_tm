@@ -1,0 +1,67 @@
+{% load static %}<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Зунгат TM{% endblock %}</title>
+    <script src="{% static 'core/vendor/htmx.min.js' %}"></script>
+    <style>
+        :root {
+            --bg: #14161a;
+            --bg-elevated: #1c1f26;
+            --border: #2b2f38;
+            --text: #e6e8eb;
+            --text-dim: #9aa1ac;
+            --accent: #5b8def;
+            --danger: #e05a5a;
+            --ok: #4caf6f;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Inter", system-ui, sans-serif;
+        }
+        nav {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-elevated);
+        }
+        nav a { color: var(--text-dim); text-decoration: none; font-weight: 600; }
+        nav a:hover, nav a.active { color: var(--text); }
+        main { padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { color: var(--text-dim); font-weight: 600; }
+        .level-ERROR { color: var(--danger); }
+        .level-WARNING { color: #d9a441; }
+        .level-INFO { color: var(--text); }
+        .level-DEBUG { color: var(--text-dim); }
+        .filters { display: flex; gap: 0.75rem; margin-bottom: 1rem; }
+        select, button {
+            background: var(--bg-elevated);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.4rem 0.6rem;
+        }
+        button { cursor: pointer; }
+        .toggle-on { background: var(--ok); color: #0a1f11; border-color: var(--ok); }
+        .toggle-off { background: var(--danger); color: #2a0a0a; border-color: var(--danger); }
+        .card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
+        .muted { color: var(--text-dim); font-size: 0.85rem; }
+    </style>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+<nav>
+    <a href="{% url 'core:log_list' %}">Логи</a>
+    <a href="{% url 'core:settings_panel' %}">Настройки</a>
+</nav>
+<main>
+    {% block content %}{% endblock %}
+</main>
+</body>
+</html>
