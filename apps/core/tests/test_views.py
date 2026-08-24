@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
-from apps.core.models import AutomationSetting
+from apps.core.models import AutomationSetting, LogEntry, PaymentLogEntry
 
 pytestmark = pytest.mark.django_db
 
@@ -23,6 +23,24 @@ def test_logs_page_renders(staff_client):
 
 def test_logs_page_requires_staff(client):
     response = client.get(reverse("core:log_list"))
+    assert response.status_code == 302
+
+
+def test_log_payments_shows_driver_and_amount(staff_client):
+    entry = LogEntry.objects.create(module="recovery", level=LogEntry.Level.INFO, message="OK: 1 платежей")
+    PaymentLogEntry.objects.create(log_entry=entry, driver_id=10606, deal_id=1, fact_payment_id=555, amount=400.0)
+
+    response = staff_client.get(reverse("core:log_payments", args=[entry.id]))
+
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert "10606" in body
+    assert "400" in body
+
+
+def test_log_payments_requires_staff(client):
+    entry = LogEntry.objects.create(module="recovery", level=LogEntry.Level.INFO, message="OK")
+    response = client.get(reverse("core:log_payments", args=[entry.id]))
     assert response.status_code == 302
 
 

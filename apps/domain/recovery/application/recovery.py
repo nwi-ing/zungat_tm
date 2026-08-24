@@ -16,4 +16,4 @@ class RecoveryApplication:
         drivers = DriverLoader(self.bx_client).load()
         drivers = DriverValidator().validate(drivers)
         drivers = DriverAllocation(self.tm_client).allocate(drivers)
-        CreatePayment(self.bx_client).create(drivers)
+        return CreatePayment(self.bx_client).create(drivers)

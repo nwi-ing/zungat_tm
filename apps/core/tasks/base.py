@@ -22,8 +22,8 @@ def automation_task(module_key: str):
                     message="skipped: disabled",
                 )
                 return None
-            with log_run(module_key):
-                return func(*args, **kwargs)
+            with log_run(module_key) as ctx:
+                return func(ctx, *args, **kwargs)
 
         return wrapper
 

@@ -5,7 +5,17 @@
     <td class="level-{{ entry.level }}">{{ entry.level }}</td>
     <td>{{ entry.message }}</td>
     <td class="muted">{% if entry.duration_ms %}{{ entry.duration_ms }} мс{% endif %}</td>
+    <td>
+        {% if entry.payments_count %}
+        <button type="button" class="link-button"
+                hx-get="{% url 'core:log_payments' entry.id %}"
+                hx-target="next tr" hx-swap="innerHTML">
+            {{ entry.payments_count }} шт. / {{ entry.payments_total|floatformat:2 }} ₽
+        </button>
+        {% endif %}
+    </td>
 </tr>
+<tr class="payments-row"><td colspan="6"></td></tr>
 {% empty %}
-<tr><td colspan="5" class="muted">Записей нет</td></tr>
+<tr><td colspan="6" class="muted">Записей нет</td></tr>
 {% endfor %}

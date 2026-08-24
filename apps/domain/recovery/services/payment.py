@@ -44,18 +44,11 @@ class CreatePayment:
             )
             return None
 
-    def _getPaymentList(self,installments:list[Installment]) -> list[FactPayment]:
-        payment_list = []
-        for installment in installments:
-            if installment.fact_payment is not None:
-                payment_list.append(installment.fact_payment)
-
-        return payment_list
-
     def create(self,drivers:list[Driver]):
         for driver in drivers:
-            payment_list = self._getPaymentList(driver.installments)
-            for payment in payment_list:
-                self._createFactPayment(payment)
+            for installment in driver.installments:
+                if installment.fact_payment is None:
+                    continue
+                installment.fact_payment = self._createFactPayment(installment.fact_payment)
             self._updateDriverSyncState(driver)
         return drivers

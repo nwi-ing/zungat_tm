@@ -18,12 +18,19 @@ def test_recovery_application_creates_fact_payment_and_advances_watermark(fake_b
                   cancelled_oper_id=0, cancelled_by_oper_id=0)
     )
 
-    RecoveryApplication(bx_client=fake_bx_client, tm_client=fake_tm_client).execute()
+    drivers = RecoveryApplication(bx_client=fake_bx_client, tm_client=fake_tm_client).execute()
 
     payments = fake_bx_client.fact_payment.list()
     assert len(payments) == 1
     assert payments[0].opportunity == 400
     assert payments[0].deal_id == 1
+
+    # execute() возвращает drivers с installment.fact_payment, заменённым на
+    # реальный объект из Bitrix (с id) -- это то, что читают Celery-задачи
+    # для построения детального лога по каждому платежу.
+    created_fact_payment = drivers[0].installments[0].fact_payment
+    assert created_fact_payment.id == payments[0].id
+    assert created_fact_payment.opportunity == 400
 
     sync_state = DriverSyncState.objects.get(driver_id=10606)
     assert sync_state.last_processed_operation_id == receipt.id

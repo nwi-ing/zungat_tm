@@ -1,6 +1,17 @@
 from django.contrib import admin
 
-from apps.core.models import LogEntry, AutomationSetting
+from apps.core.models import LogEntry, AutomationSetting, PaymentLogEntry
+
+
+class PaymentLogEntryInline(admin.TabularInline):
+    model = PaymentLogEntry
+    extra = 0
+    fields = ("driver_id", "deal_id", "fact_payment_id", "amount", "arrest_amount", "success", "error_message")
+    readonly_fields = fields
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(LogEntry)
@@ -10,6 +21,7 @@ class LogEntryAdmin(admin.ModelAdmin):
     search_fields = ("message",)
     readonly_fields = ("created_at", "module", "level", "message", "context", "duration_ms")
     ordering = ("-created_at",)
+    inlines = [PaymentLogEntryInline]
 
     def has_add_permission(self, request):
         return False

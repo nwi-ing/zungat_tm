@@ -38,3 +38,4 @@ class AutopaymentApplication:
         installments = self.installment_operation.make(installments)
         installments = self.installment_create_payment.create(installments)
         logger.info("Завершение работы")
+        return installments

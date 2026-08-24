@@ -25,9 +25,15 @@ def test_autopayment_application_runs_end_to_end_without_crashing(fake_bx_client
     )
     fake_tm_client.driver.seed(Driver(driver_id=10606, balance=10000))
 
-    AutopaymentApplication(bx_client=fake_bx_client, tm_client=fake_tm_client).execute()
+    installments = AutopaymentApplication(bx_client=fake_bx_client, tm_client=fake_tm_client).execute()
 
     payments = fake_bx_client.fact_payment.list()
     assert len(payments) == 1
     assert payments[0].opportunity == 1000
     assert payments[0].tm_payment_id is not None
+
+    # execute() возвращает список успешно созданных installment -- это то,
+    # что читает Celery-задача для построения детального лога по платежам.
+    assert len(installments) == 1
+    assert installments[0].fact_payment.id == payments[0].id
+    assert installments[0].payment_rule.driver_id == 10606

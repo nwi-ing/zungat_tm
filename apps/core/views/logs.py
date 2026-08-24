@@ -1,6 +1,7 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
-from django.shortcuts import render
+from django.db.models import Count, Sum
+from django.shortcuts import render, get_object_or_404
 
 from apps.core.models import LogEntry
 
@@ -8,7 +9,10 @@ PAGE_SIZE = 50
 
 
 def _filtered_queryset(request):
-    qs = LogEntry.objects.all()
+    qs = LogEntry.objects.annotate(
+        payments_count=Count("payments"),
+        payments_total=Sum("payments__amount"),
+    )
     module = request.GET.get("module") or ""
     level = request.GET.get("level") or ""
     if module:
@@ -35,3 +39,9 @@ def log_list(request):
     if request.headers.get("HX-Request") == "true":
         return render(request, "core/partials/logs_table.html", context)
     return render(request, "core/logs_list.html", context)
+
+
+@staff_member_required
+def log_payments(request, log_id):
+    entry = get_object_or_404(LogEntry, pk=log_id)
+    return render(request, "core/partials/log_payments.html", {"payments": entry.payments.all()})

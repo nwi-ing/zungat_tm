@@ -1,0 +1,28 @@
+<td colspan="6">
+    <table class="nested">
+        <thead>
+            <tr>
+                <th>Водитель</th>
+                <th>Сделка</th>
+                <th>Bitrix ID</th>
+                <th>Сумма</th>
+                <th>В арест</th>
+                <th>Статус</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for p in payments %}
+        <tr>
+            <td>{{ p.driver_id|default:"—" }}</td>
+            <td>{{ p.deal_id|default:"—" }}</td>
+            <td>{{ p.fact_payment_id|default:"—" }}</td>
+            <td>{{ p.amount|floatformat:2 }}</td>
+            <td>{% if p.arrest_amount is not None %}{{ p.arrest_amount|floatformat:2 }}{% else %}—{% endif %}</td>
+            <td>{% if p.success %}OK{% else %}Ошибка{% if p.error_message %}: {{ p.error_message }}{% endif %}{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="muted">Нет данных</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</td>

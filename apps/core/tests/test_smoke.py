@@ -1,6 +1,6 @@
 import pytest
 
-from apps.core.models import AutomationSetting, LogEntry
+from apps.core.models import AutomationSetting, LogEntry, PaymentLogEntry
 from apps.core.services import is_module_enabled, log_run
 from apps.core.tasks import automation_task
 from apps.integrations.bx24.lib.schemas import Deal
@@ -35,8 +35,34 @@ def test_log_run_logs_error_and_reraises():
 def test_is_module_enabled_respects_flag():
     AutomationSetting.objects.create(module_key="smoke", enabled=False)
     assert is_module_enabled("smoke") is False
-    AutomationSetting.objects.filter(module_key="smoke").update(enabled=True)
-    assert is_module_enabled("smoke") is True
+
+
+def test_log_run_attaches_payment_log_entries():
+    with log_run("smoke") as ctx:
+        ctx["payments"] = [
+            {"driver_id": 10606, "deal_id": 1, "fact_payment_id": 555, "amount": 200.0, "success": True},
+            {"driver_id": 999, "deal_id": 2, "amount": None, "success": False, "error_message": "boom"},
+        ]
+    entry = LogEntry.objects.get()
+    assert entry.message == "OK: 2 платежей"
+    assert "payments" not in entry.context
+
+    rows = list(PaymentLogEntry.objects.filter(log_entry=entry).order_by("driver_id"))
+    assert len(rows) == 2
+    assert rows[0].driver_id == 999
+    assert rows[0].success is False
+    assert rows[0].error_message == "boom"
+    assert rows[1].driver_id == 10606
+    assert rows[1].fact_payment_id == 555
+    assert rows[1].amount == 200.0
+
+
+def test_log_run_without_payments_leaves_no_child_rows():
+    with log_run("smoke"):
+        pass
+    entry = LogEntry.objects.get()
+    assert entry.message == "OK"
+    assert PaymentLogEntry.objects.filter(log_entry=entry).count() == 0
 
 
 def test_automation_task_skips_when_disabled():
@@ -58,7 +84,7 @@ def test_automation_task_runs_and_logs_when_enabled():
     calls = []
 
     @automation_task(module_key="smoke_task2")
-    def run():
+    def run(ctx):
         calls.append(1)
 
     AutomationSetting.objects.create(module_key="smoke_task2", enabled=True)

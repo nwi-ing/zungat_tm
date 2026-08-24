@@ -53,6 +53,10 @@
         .toggle-off { background: var(--danger); color: #2a0a0a; border-color: var(--danger); }
         .card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
         .muted { color: var(--text-dim); font-size: 0.85rem; }
+        .link-button { background: none; border: none; color: var(--accent); padding: 0; text-decoration: underline; cursor: pointer; }
+        .payments-row td { padding: 0; border-bottom: none; }
+        .payments-row table.nested { margin: 0.25rem 0 0.75rem; font-size: 0.85rem; }
+        .payments-row table.nested th, .payments-row table.nested td { padding: 0.35rem 0.6rem; }
     </style>
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
