@@ -60,10 +60,21 @@ class InstallmentCalculation:
             )
 
     def calculate(self,installments:list[Installment]):
+        balances = {}
         for installment in installments:
-            balance = self.tm_client.driver.get(installment.payment_rule.driver_id).balance
+            driver_id = installment.payment_rule.driver_id
+            if driver_id not in balances:
+                balances[driver_id] = self.tm_client.driver.get(driver_id).balance
+            balance = balances[driver_id]
+
             payment_sum = self._getPaymentSum(installment)
             installment.operation = self._makeOperation(installment,payment_sum)
             installment.fact_payment = self._makePayment(installment,balance)
-        
+
+            # Реальное списание в TM произойдёт позже, отдельным проходом (MakeOperation),
+            # но баланс для следующей рассрочки ЭТОГО ЖЕ водителя в этом же запуске нужно
+            # уменьшить уже сейчас — иначе несколько рассрочек одного водителя в один день
+            # независимо друг от друга посчитают одну и ту же сумму как "оплаченную с баланса".
+            balances[driver_id] -= installment.operation.oper_sum
+
         return installments

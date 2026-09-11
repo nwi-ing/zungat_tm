@@ -52,3 +52,21 @@ def test_fact_payment_fully_paid_when_balance_sufficient(fake_tm_client):
 
     assert result[0].fact_payment.opportunity == 1000
     assert result[0].fact_payment.arest_sum == 0
+
+
+def test_two_installments_same_driver_do_not_double_count_balance(fake_tm_client):
+    # Один и тот же водитель, две рассрочки списываются в одном запуске.
+    # Баланс должен "расходоваться" последовательно, а не читаться заново
+    # с нуля для каждой рассрочки (баг: обе считали одну и ту же сумму
+    # как покрытую балансом).
+    fake_tm_client.driver.seed(Driver(driver_id=10606, balance=73.57))
+    first = make_installment(payment_sum=3750, opportunity=20000)
+    second = make_installment(payment_sum=6800, opportunity=20000)
+
+    result = InstallmentCalculation(fake_tm_client).calculate([first, second])
+
+    assert result[0].fact_payment.opportunity == 73.57
+    assert result[0].fact_payment.arest_sum == 3676.43
+
+    assert result[1].fact_payment.opportunity == 0
+    assert result[1].fact_payment.arest_sum == 6800
